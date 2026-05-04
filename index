@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flybondi Master Ops - Análisis Total</title>
+    <style>
+        :root {
+            --fb-orange: #f37021; --fb-yellow: #ffc20e; --fb-dark: #121212;
+            --fb-card: #1e1e1e; --fb-text: #e0e0e0; --fb-border: #333;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--fb-dark); color: var(--fb-text); margin: 0; padding: 20px; }
+        .app-container { width: 100%; max-width: 1100px; margin: auto; background: var(--fb-card); border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--fb-border); overflow: hidden; }
+        .header { background: linear-gradient(135deg, var(--fb-orange), var(--fb-yellow)); color: black; padding: 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 900; }
+        .content { padding: 25px; }
+        
+        .input-section { background: #252525; padding: 20px; border-radius: 15px; border: 1px solid var(--fb-border); position: relative; margin-bottom: 20px; }
+        textarea { width: 100%; height: 130px; background: #121212; color: white; padding: 15px; border: 2px solid #444; border-radius: 12px; font-size: 16px; resize: none; outline: none; transition: 0.3s; }
+        textarea:focus { border-color: var(--fb-orange); }
+        
+        .btn-voice { position: absolute; right: 35px; top: 35px; background: #333; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-voice.listening { background: #d32f2f; animation: pulse 1.5s infinite; }
+        
+        .btn-analyze { width: 100%; background: var(--fb-orange); color: white; border: none; padding: 18px; border-radius: 12px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 10px; text-transform: uppercase; }
+        
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; margin-top: 20px; }
+        .result-card { background: #2a2a2a; border-radius: 12px; padding: 20px; border-left: 10px solid var(--fb-yellow); position: relative; animation: fadeIn 0.3s ease; }
+        .code-badge { position: absolute; top: -10px; right: 15px; background: var(--fb-orange); color: white; padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 20px; }
+        
+        .cat-tag { font-size: 10px; color: var(--fb-yellow); font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .event-name { font-size: 17px; font-weight: 700; color: white; margin-bottom: 10px; }
+        .description { font-size: 13px; color: #bbb; line-height: 1.4; }
+
+        .learn-section { margin-top: 30px; padding: 20px; background: rgba(243, 112, 33, 0.05); border: 1px dashed var(--fb-orange); border-radius: 15px; text-align: center; }
+        .btn-learn { background: transparent; color: var(--fb-orange); border: 1px solid var(--fb-orange); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .btn-learn:hover { background: var(--fb-orange); color: white; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h1>FLYBONDI MASTER ANALYZER PRO</h1>
+        <p>Análisis Exhaustivo Multicausa | Manual + Excel + IA Adaptativa</p>
+    </div>
+
+    <div class="content">
+        <div class="input-section">
+            <textarea id="userInput" placeholder="Escribe o dicta TODO lo sucedido sin miedo a la extensión..."></textarea>
+            <button class="btn-voice" id="voiceBtn">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+            </button>
+            <button class="btn-analyze" onclick="runTotalAnalysis()">Ejecutar Análisis de Impacto Total</button>
+        </div>
+
+        <div id="resultsGrid" class="results-grid"></div>
+
+        <div id="learnSection" class="learn-section">
+            <p><strong>¿Falta algún código de los que informaste?</strong> Enséñale al sistema para la próxima.</p>
+            <input type="text" id="newCode" placeholder="Cód" style="width: 50px; padding: 10px; background: #121212; color: white; border: 1px solid #444; border-radius: 5px;">
+            <input type="text" id="newName" placeholder="Nombre del evento" style="width: 200px; padding: 10px; background: #121212; color: white; border: 1px solid #444; border-radius: 5px;">
+            <button class="btn-learn" onclick="teachAI()">Registrar Nuevo Aprendizaje</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // BASE DE DATOS MAESTRA (Sincronizada con PDF y Excel)
+    let masterDB = [
+        { id: "15", cat: "SALA", ev: "DISCREPANCIA EMBARQUE", keys: ["discrepancia", "pax sala", "cierre sala", "pasabordo", "sistema ink", "kiu"], desc: "Diferencia entre sistema y físico o errores en el cierre de vuelo por sala." },
+        { id: "19", cat: "PAX", ev: "MOVILIDAD REDUCIDA", keys: ["movilidad reducida", "silla", "asistencia", "wchr"], desc: "Manejo de pasajeros con asistencia especial." },
+        { id: "32", cat: "RAMPA", ev: "PERSONAL / CARGA LENTA", keys: ["carga lenta", "falta personal", "itc tarde", "redguard", "estibadores"], desc: "Demora por falta de personal de rampa o trabajo lento." },
+        { id: "33", cat: "RAMPA", ev: "MICROS / BUS", keys: ["micro", "bus", "colectivo", "micros"], desc: "Demora por falta o llegada tarde de los buses de pasajeros." },
+        { id: "36", cat: "RAMPA", ev: "COMBUSTIBLE / YPF", keys: ["combustible", "ypf", "shell", "tanqueo", "fuel", "axion"], desc: "Espera de camión o demora en la carga de combustible." },
+        { id: "37", cat: "RAMPA", ev: "CATERING", keys: ["catering", "comida", "suministros", "trolley"], desc: "Demora en el servicio de catering o suministros." },
+        { id: "43", cat: "TECH", ev: "MANTO NO PROGRAMADO", keys: ["novedad", "43", "mantenimiento no programado", "tecnico", "agujero bodega"], desc: "Intervención técnica no programada detectada en escala." },
+        { id: "55", cat: "SISTEMAS", ev: "FALLA SISTEMA / INK", keys: ["falla sistema", "ink", "error sistema", "not checked"], desc: "Problemas con el sistema de despacho o boarding." },
+        { id: "62", cat: "OPS", ev: "REQ. CAPITÁN / REVISIÓN", keys: ["notoc", "litio", "revision capitan", "inreach", "agujero"], desc: "Chequeos de seguridad adicionales solicitados por la tripulación técnica." },
+        { id: "68", cat: "CABINA", ev: "ERROR CONTEO CABINA", keys: ["conteo cabina", "comisario", "auxiliar", "mal contado"], desc: "Error en el conteo de pax por parte de la tripulación de cabina." },
+        { id: "77", cat: "CLIMA", ev: "ALERTA ROJA RAMPA", keys: ["alerta roja", "rayos", "tormenta rampa", "met"], desc: "Suspensión de tareas en rampa por meteorología." },
+        { id: "88", cat: "AIRPORT", ev: "OBSTRUCCIÓN PISTA", keys: ["perro pista", "pista cerrada", "obstruccion"], desc: "Cierre temporal de pista por factores externos." },
+        { id: "89", cat: "ATC", ev: "TORRE / ATC", keys: ["torre", "atc", "permiso", "remolque"], desc: "Demora por autorización de torre de control." },
+        { id: "93", cat: "ARRASTRE", ev: "ARRIBO TARDÍO", keys: ["arribo tardio", "93", "arrastre", "vuelo previo"], desc: "Llegada tarde del avión desde la escala anterior." },
+        { id: "93M", cat: "ARRASTRE", ev: "ARRIBO TARDÍO MANTO", keys: ["93m", "arrastre manto"], desc: "Arribo tardío por mantenimiento en el tramo previo." },
+        { id: "98", cat: "OTROS", ev: "MEDIDA GREMIAL", keys: ["gremial", "sindicato", "paro"], desc: "Demoras por medidas de fuerza externas." }
+    ];
+
+    // Cargar lo aprendido
+    const knowledge = JSON.parse(localStorage.getItem('fb_ai_knowledge')) || [];
+    masterDB = [...masterDB, ...knowledge];
+
+    function runTotalAnalysis() {
+        const input = document.getElementById('userInput').value.toLowerCase();
+        const grid = document.getElementById('resultsGrid');
+        grid.innerHTML = '';
+        
+        let encontrados = [];
+
+        // ESCANEO ATÓMICO: Evalúa cada entrada de la DB contra el texto
+        masterDB.forEach(item => {
+            let matches = item.keys.filter(key => input.includes(key));
+            
+            // Lógica de desambiguación inteligente para CONTEO
+            if (input.includes("conteo")) {
+                if (item.id === "68" && (input.includes("cabina") || input.includes("comisario") || input.includes("auxiliar"))) {
+                    encontrados.push(item);
+                } else if (item.id === "15" && (input.includes("sala") || input.includes("pax") || input.includes("abordaje"))) {
+                    encontrados.push(item);
+                }
+            } else if (matches.length > 0) {
+                encontrados.push(item);
+            }
+        });
+
+        // Eliminar duplicados
+        let uniqueResults = [...new Map(encontrados.map(item => [item.id, item])).values()];
+
+        if (uniqueResults.length > 0) {
+            uniqueResults.forEach(res => {
+                grid.innerHTML += `
+                    <div class="result-card">
+                        <div class="code-badge">${res.id}</div>
+                        <span class="cat-tag">${res.cat}</span>
+                        <div class="event-name">${res.ev}</div>
+                        <div class="description">${res.desc}</div>
+                    </div>`;
+            });
+        } else {
+            grid.innerHTML = "<p style='text-align:center; width:100%;'>No se identificaron códigos. Prueba a ser más descriptivo o enséñale a la IA abajo.</p>";
+        }
+    }
+
+    function teachAI() {
+        const code = document.getElementById('newCode').value;
+        const name = document.getElementById('newName').value;
+        const phrase = document.getElementById('userInput').value.toLowerCase();
+
+        if (!code || !name || !phrase) return alert("Escribe la descripción arriba, y el código/nombre abajo.");
+
+        const newItem = {
+            id: code,
+            cat: "APRENDIDO",
+            ev: name.toUpperCase(),
+            keys: [phrase],
+            desc: "Código agregado por el usuario basándose en reportes previos."
+        };
+
+        const currentKnowledge = JSON.parse(localStorage.getItem('fb_ai_knowledge')) || [];
+        currentKnowledge.push(newItem);
+        localStorage.setItem('fb_ai_knowledge', JSON.stringify(currentKnowledge));
+        
+        alert("Aprendizaje guardado. Ahora este reporte siempre activará el código " + code);
+        location.reload();
+    }
+
+    // VOZ
+    const voiceBtn = document.getElementById('voiceBtn');
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Recognition) {
+        const rec = new Recognition();
+        rec.lang = 'es-AR';
+        voiceBtn.onclick = () => { rec.start(); voiceBtn.classList.add('listening'); };
+        rec.onresult = (e) => { 
+            document.getElementById('userInput').value = e.results[0][0].transcript; 
+            voiceBtn.classList.remove('listening');
+            runTotalAnalysis();
+        };
+    }
+</script>
+</body>
+</html>
